@@ -13,9 +13,6 @@ from datahub.emitter.mce_builder import (
 from datahub.metadata.schema_classes import (
     MLModelPropertiesClass,
     MLModelGroupPropertiesClass,
-    UpstreamLineageClass,
-    UpstreamClass,
-    DatasetLineageTypeClass,
 )
 
 from src.config import PLATFORM, ENV, ML_MODELS, setup_logging
@@ -85,39 +82,8 @@ def build_ml_model_mcps():
     return mcps
 
 
-def build_model_lineage_mcps():
-    """ML 모델의 입출력 리니지 MCP 목록을 반환한다.
-
-    customer_features → [각 ML 모델] → model_scores
-    """
-    mcps = []
-
-    for model_key in ML_MODELS:
-        model_urn = make_ml_model_urn(
-            platform=PLATFORM,
-            model_name=model_key,
-            env=ENV,
-        )
-
-        # 모델의 upstream: customer_features
-        input_upstreams = [
-            UpstreamClass(
-                dataset=make_dataset_urn(platform=PLATFORM, name=ds, env=ENV),
-                type=DatasetLineageTypeClass.TRANSFORMED,
-            )
-            for ds in MODEL_INPUT_DATASETS
-        ]
-        input_mcp = MetadataChangeProposalWrapper(
-            entityUrn=model_urn,
-            aspect=UpstreamLineageClass(upstreams=input_upstreams),
-        )
-        mcps.append(input_mcp)
-
-    return mcps
-
-
 def register_ml_models(emitter):
-    """ML 모델 그룹, 모델, 리니지를 DataHub에 등록한다."""
+    """ML 모델 그룹 및 모델을 DataHub에 등록한다."""
     group_mcps = build_model_group_mcps()
     for mcp in group_mcps:
         emitter.emit(mcp)
@@ -128,9 +94,4 @@ def register_ml_models(emitter):
         emitter.emit(mcp)
     logger.info("ML 모델 %d개 등록 완료", len(model_mcps))
 
-    lineage_mcps = build_model_lineage_mcps()
-    for mcp in lineage_mcps:
-        emitter.emit(mcp)
-    logger.info("ML 모델 리니지 %d개 등록 완료", len(lineage_mcps))
-
-    return group_mcps + model_mcps + lineage_mcps
+    return group_mcps + model_mcps

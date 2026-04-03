@@ -1,10 +1,13 @@
 """DataHub 데이터셋 메타데이터 등록 (스키마, 설명, 태그, 용어 연결)."""
 
+import time
+
 from datahub.emitter.mcp import MetadataChangeProposalWrapper
 from datahub.emitter.mce_builder import (
     make_dataset_urn, make_data_platform_urn, make_tag_urn, make_term_urn,
 )
 from datahub.metadata.schema_classes import (
+    AuditStampClass,
     DatasetPropertiesClass,
     SchemaMetadataClass,
     SchemaFieldClass,
@@ -37,7 +40,10 @@ def _terms(*term_names):
     """용어 목록을 GlossaryTermsClass로 변환한다."""
     return GlossaryTermsClass(
         terms=[GlossaryTermAssociationClass(urn=make_term_urn(t)) for t in term_names],
-        auditStamp=None,
+        auditStamp=AuditStampClass(
+            time=int(time.time() * 1000),
+            actor="urn:li:corpuser:datahub",
+        ),
     )
 
 
