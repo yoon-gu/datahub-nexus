@@ -73,3 +73,6 @@ dmypy.json
 # Logs
 *.log
 logs/
+
+# Pip install artifacts
+=0.12.0
